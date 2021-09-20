@@ -23,23 +23,40 @@
  */
 
 $string['pluginname'] = 'Notify students step';
+$string['responsetimeout'] = 'Response Timeout';
 $string['option'] = 'Option';
 $string['optin'] = 'Opt-In';
 $string['optout'] = 'Opt-Out';
-$string['subject'] = 'Email Title';
-$string['contenthtml'] = 'Email Text';
-$string['subject_default'] = 'Courses are being deleted';
-$string['contenthtml_default'] = '<p>' . 'Dear Student,'
-    . '<br><br>' . 'the following courses are being deleted:'
-    . '<br>' . '##courses-html##'
-    . '<br>' . 'Please save all necessary material before deletion.'
-    . '<br><br>' . 'Best Regards'
-    . '<br>' . 'Your Learnweb Team'
-    . '</p>';
 $emailplaceholders = '<p>' . 'You can use the following placeholders:'
     . '<br>' . 'First name of recipient: ##firstname##'
     . '<br>' . 'Last name of recipient: ##lastname##'
     . '<br>' . 'Impacted courses: ##courses-html##'
     . '</p>';
-$string['subject_help'] = $emailplaceholders;
-$string['contenthtml_help'] = $emailplaceholders;
+$string['teacher_subject'] = 'Email Title [Teachers]';
+$string['teacher_subject_default'] = 'Courses are being deleted';
+$string['teacher_subject_help'] = $emailplaceholders;
+$string['teacher_content'] = 'Email Text [Teachers]';
+$string['teacher_content_default'] = '<p>' . 'Dear Teacher,'
+    . '<br><br>' . 'the following courses are being deleted:'
+    . '<br>' . '##courses##'
+    . '<br>' . 'It is for you to decide if the students get notified or not.'
+    . '<br>' . 'For further details please visit the "Manage Courses" page.'
+    . '<br><br>' . 'Best Regards'
+    . '<br>' . 'Your Learnweb Team'
+    . '</p>';
+$string['teacher_content_help'] = $emailplaceholders;
+$string['student_subject'] = 'Email Title [Students]';
+$string['student_subject_default'] = 'Courses are being deleted';
+$string['student_subject_help'] = $emailplaceholders;
+$string['student_content'] = 'Email Text [Students]';
+$string['student_content_default'] = '<p>' . 'Dear Student,'
+    . '<br><br>' . 'the following courses are being deleted:'
+    . '<br>' . '##courses##'
+    . '<br>' . 'Please save all necessary material before deletion.'
+    . '<br><br>' . 'Best Regards'
+    . '<br>' . 'Your Learnweb Team'
+    . '</p>';
+$string['student_content_help'] = $emailplaceholders;
+$string['notify'] = 'Notify Students';
+$string['nonotify'] = 'Do not notify Students';
+

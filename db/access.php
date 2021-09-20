@@ -21,3 +21,18 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
+
+$capabilities = array(
+
+    'lifecyclestep/notifystudents:choice' => array(
+        'contextlevel' => CONTEXT_COURSE,
+        'captype' => 'write',
+        'archetypes' => array(
+            'manager' => CAP_PREVENT,
+            'editingteacher' => CAP_ALLOW,
+            'teacher' => CAP_PREVENT,
+            'students' => CAP_PREVENT,
+        ),
+        'clonepermissionsfrom' => 'tool/lifecycle:managecourses'
+    ),
+);

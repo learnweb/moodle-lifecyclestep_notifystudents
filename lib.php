@@ -25,6 +25,7 @@ namespace tool_lifecycle\step;
 
 use context_course;
 use core_user;
+use tool_lifecycle\local\manager\process_manager;
 use tool_lifecycle\local\manager\settings_manager;
 use tool_lifecycle\local\manager\step_manager;
 use tool_lifecycle\local\response\step_response;
@@ -59,6 +60,15 @@ class notifystudents extends libbase {
     public function process_course($processid, $instanceid, $course) {
         global $DB;
         $context = context_course::instance($course->id);
+        $userrecords = get_users_by_capability($context, 'lifecyclestep/notifystudents:choice');
+        foreach ($userrecords as $userrecord) {
+            $record = new \stdClass();
+            $record->touser = $userrecord->id;
+            $record->courseid = $course->id;
+            $record->instanceid = $instanceid;
+            $record->emailtype = 'teacher';
+            $DB->insert_record('lifecyclestep_notifystudents', $record);
+        }
         $userrecords = get_enrolled_users($context, '', 0, '*');
         foreach ($userrecords as $userrecord) {
             if (user_has_role_assignment($userrecord->id, 5)) {
@@ -66,11 +76,11 @@ class notifystudents extends libbase {
                 $record->touser = $userrecord->id;
                 $record->courseid = $course->id;
                 $record->instanceid = $instanceid;
+                $record->emailtype = 'student';
                 $DB->insert_record('lifecyclestep_notifystudents', $record);
             }
         }
-
-        return step_response::proceed();
+        return step_response::waiting();
     }
 
     /**
@@ -85,13 +95,33 @@ class notifystudents extends libbase {
      * @return step_response
      */
     public function process_waiting_course($processid, $instanceid, $course) {
-        return $this->process_course($processid, $instanceid, $course);
+        global $DB;
+        // When time runs up and no one wants to keep the course, then proceed.
+        $settings = settings_manager::get_settings($instanceid, settings_type::STEP);
+        $process = process_manager::get_process_by_id($processid);
+        if ($process->timestepchanged < time() - $settings['responsetimeout']) {
+            if ($settings['option'] == 0) {
+                // What happens if opt-out was chosen.
+                $type = 'student';
+                $this->send_email($type);
+            } else {
+                // What happens if opt-in was chosen.
+                $DB->delete_records('lifecyclestep_notifystudents',
+                    array('instanceid' => $instanceid,
+                        'courseid' => $course->id));
+            }
+            return step_response::proceed();
+        }
+        return step_response::waiting();
     }
 
     /**
      * Send emails to all students, but only one mail per students.
      */
     public function post_processing_bulk_operation() {
+        $type = 'teacher';
+        $this->send_email($type);
+        /*
         global $DB, $PAGE;
         $stepinstances = step_manager::get_step_instances_by_subpluginname($this->get_subpluginname());
         foreach ($stepinstances as $step) {
@@ -99,7 +129,7 @@ class notifystudents extends libbase {
             // Set system context, since format_text needs a context.
             $PAGE->set_context(\context_system::instance());
             // Format the raw string in the DB to FORMAT_HTML.
-            $settings['contenthtml'] = format_text($settings['contenthtml'], FORMAT_HTML);
+            $settings['teacher_content'] = format_text($settings['teacher_content'], FORMAT_HTML);
 
             $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
                 array('instanceid' => $step->id), '', 'distinct touser');
@@ -112,8 +142,8 @@ class notifystudents extends libbase {
 
                 $parsedsettings = $this->replace_placeholders($settings, $user, $step->id, $mailentries);
 
-                $subject = $parsedsettings['subject'];
-                $contenthtml = $parsedsettings['contenthtml'];
+                $subject = $parsedsettings['teacher_subject'];
+                $contenthtml = $parsedsettings['teacher_content'];
                 email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
                 $DB->delete_records('lifecyclestep_notifystudents',
                     array('instanceid' => $step->id,
@@ -121,6 +151,42 @@ class notifystudents extends libbase {
                 $transaction->allow_commit();
             }
         }
+        */
+    }
+
+    private function send_email($type) {
+        global $DB, $PAGE;
+        $stepinstances = step_manager::get_step_instances_by_subpluginname($this->get_subpluginname());
+        foreach ($stepinstances as $step) {
+            $settings = settings_manager::get_settings($step->id, settings_type::STEP);
+            // Set system context, since format_text needs a context.
+            $PAGE->set_context(\context_system::instance());
+            // Format the raw string in the DB to FORMAT_HTML.
+            $settings[$type . '_content'] = format_text($settings[$type . '_content'], FORMAT_HTML);
+
+            $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
+                array('instanceid' => $step->id), '', 'distinct touser');
+            foreach ($userstobeinformed as $userrecord) {
+                $user = \core_user::get_user($userrecord->touser);
+                $transaction = $DB->start_delegated_transaction();
+                $mailentries = $DB->get_records('lifecyclestep_notifystudents',
+                    array('instanceid' => $step->id,
+                        'touser' => $user->id, 'emailtype' => $type));
+
+                $parsedsettings = $this->replace_placeholders($settings, $user, $step->id, $mailentries);
+
+                $subject = $parsedsettings[$type . '_subject'];
+                $contenthtml = $parsedsettings[$type . '_content'];
+                email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
+                $DB->delete_records('lifecyclestep_notifystudents',
+                    array('instanceid' => $step->id,
+                        'touser' => $user->id));
+                $transaction->allow_commit();
+            }
+        }
+    }
+
+    private function save_db($type) {
 
     }
 
@@ -148,7 +214,7 @@ class notifystudents extends libbase {
         $replacements [] = $user->lastname;
 
         // Replace courses html.
-        $patterns [] = '##courses-html##';
+        $patterns [] = '##courses##';
         $courses = $mailentries;
         $coursestabledata = array();
         foreach ($courses as $entry) {
@@ -159,18 +225,6 @@ class notifystudents extends libbase {
         $replacements [] = \html_writer::table($coursestable);
 
         return str_ireplace($patterns, $replacements, $strings);
-    }
-
-    /**
-     * Parses a course for the non html format.
-     * @param int $courseid id of the course
-     * @return string
-     * @throws \dml_exception
-     */
-    private function parse_course($courseid) {
-        $course = get_course($courseid);
-        $result = $course->fullname;
-        return $result;
     }
 
     /**
@@ -198,8 +252,12 @@ class notifystudents extends libbase {
      */
     public function instance_settings() {
         return array(
-            new instance_setting('subject', PARAM_TEXT),
-            new instance_setting('contenthtml', PARAM_RAW),
+            new instance_setting('responsetimeout', PARAM_INT),
+            new instance_setting('option', PARAM_INT),
+            new instance_setting('teacher_subject', PARAM_TEXT),
+            new instance_setting('teacher_content', PARAM_RAW),
+            new instance_setting('student_subject', PARAM_TEXT),
+            new instance_setting('student_content', PARAM_RAW),
         );
     }
 
@@ -211,26 +269,46 @@ class notifystudents extends libbase {
      */
     public function extend_add_instance_form_definition($mform) {
 
+        // Adding a time limit for the teacher to respond.
+        $elementname = 'responsetimeout';
+        $mform->addElement('duration', $elementname, get_string('responsetimeout', 'lifecyclestep_notifystudents'));
+        $mform->setType($elementname, PARAM_INT);
+
         // Adding radio buttons for opt-in or opt-out.
         $elementname = 'opt';
         $radioarray = array();
-        $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optin'), 1, $attributes);
-        $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optout'), 0, $attributes);
-        $mform->addGroup($radioarray, 'option', '', array(' '), false);
+        $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optin', 'lifecyclestep_notifystudents'), 1);
+        $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optout', 'lifecyclestep_notifystudents'), 0);
+        $mform->addGroup($radioarray, 'option', get_string('option', 'lifecyclestep_notifystudents'), array(' '), false);
 
-        // Adding a subject field for the email.
-        $elementname = 'subject';
-        $mform->addElement('textarea', $elementname, get_string('subject', 'lifecyclestep_notifystudents'),
+        // Adding a subject field for the email to the editingteachers.
+        $elementname = 'teacher_subject';
+        $mform->addElement('textarea', $elementname, get_string('teacher_subject', 'lifecyclestep_notifystudents'),
             array('style="resize:none" wrap="virtual" rows="1" cols="100"'));
-        $mform->addHelpButton($elementname, 'subject', 'lifecyclestep_notifystudents');
+        $mform->addHelpButton($elementname, 'teacher_subject', 'lifecyclestep_notifystudents');
         $mform->setType($elementname, PARAM_TEXT);
-        $mform->setDefault($elementname, get_string('subject_default', 'lifecyclestep_notifystudents'));
+        $mform->setDefault($elementname, get_string('teacher_subject_default', 'lifecyclestep_notifystudents'));
 
-        // Adding a content field for the email.
-        $elementname = 'contenthtml';
-        $mform->addElement('editor', $elementname, get_string('contenthtml', 'lifecyclestep_notifystudents'))
-            ->setValue(array('text' => get_string('contenthtml_default', 'lifecyclestep_notifystudents')));
-        $mform->addHelpButton($elementname, 'contenthtml', 'lifecyclestep_notifystudents');
+        // Adding a content field for the email to the editing teachers.
+        $elementname = 'teacher_content';
+        $mform->addElement('editor', $elementname, get_string('teacher_content', 'lifecyclestep_notifystudents'))
+            ->setValue(array('text' => get_string('teacher_content_default', 'lifecyclestep_notifystudents')));
+        $mform->addHelpButton($elementname, 'teacher_content', 'lifecyclestep_notifystudents');
+        $mform->setType($elementname, PARAM_RAW);
+
+        // Adding a subject field for the email to the students.
+        $elementname = 'student_subject';
+        $mform->addElement('textarea', $elementname, get_string('student_subject', 'lifecyclestep_notifystudents'),
+            array('style="resize:none" wrap="virtual" rows="1" cols="100"'));
+        $mform->addHelpButton($elementname, 'student_subject', 'lifecyclestep_notifystudents');
+        $mform->setType($elementname, PARAM_TEXT);
+        $mform->setDefault($elementname, get_string('student_subject_default', 'lifecyclestep_notifystudents'));
+
+        // Adding a content field for the email to the students.
+        $elementname = 'student_content';
+        $mform->addElement('editor', $elementname, get_string('student_content', 'lifecyclestep_notifystudents'))
+            ->setValue(array('text' => get_string('student_content_default', 'lifecyclestep_notifystudents')));
+        $mform->addHelpButton($elementname, 'student_content', 'lifecyclestep_notifystudents');
         $mform->setType($elementname, PARAM_RAW);
 
     }
