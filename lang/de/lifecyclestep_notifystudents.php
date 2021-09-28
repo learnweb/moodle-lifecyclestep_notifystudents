@@ -23,23 +23,43 @@
  */
 
 $string['pluginname'] = 'Studierende-benachrichtigen-Schritt';
+$string['responsetimeout'] = 'Antwortfrist';
 $string['option'] = 'Option';
 $string['optin'] = 'Opt-In';
 $string['optout'] = 'Opt-Out';
-$string['mail_title'] = 'Email Titel';
-$string['mail_text'] = 'Email Text';
-$string['mail_title_default'] = 'Kurse werden gelöscht';
-$string['mail_text_default'] = '<p>' . 'Lieber Studierender,'
-    . '<br><br>' . 'die folgenden Kurse werden bald gelöscht:'
-    . '<br>' . '##courses-html##'
-    . '<br>' . 'Bitte speichern Sie alle noetigen Materialien.'
-    . '<br><br>' . 'Mit freundlichen Gruessen'
-    . '<br>' . 'Dein Learnweb Team'
-    . '</p>';
 $emailplaceholders = '<p>' . 'Sie können die folgenden Platzhalter benutzen:'
     . '<br>' . 'Vorname des Empfängers: ##firstname##'
     . '<br>' . 'Nachname des Empfängers: ##lastname##'
     . '<br>' . 'Betroffene Kurse: ##courses-html##'
     . '</p>';
-$string['mail_title_help'] = $emailplaceholders;
-$string['mail_text_help'] = $emailplaceholders;
+$string['teacher_subject'] = 'Email Titel [Lehrende]';
+$string['teacher_subject_default'] = 'Kurse werden geloescht';
+$string['teacher_subject_help'] = $emailplaceholders;
+$string['teacher_content'] = 'Email Text [Lehrende]';
+$string['teacher_content_default'] = '<p>' . 'Lieber Lehreder,'
+    . '<br><br>' . 'die folgenden Kurse werden bald geloescht:'
+    . '<br>' . '##courses##'
+    . '<br>' . 'Sie könnnen darüber entscheiden, ob die Kursteilnehmer darüber informiert werden sollen oder nicht.'
+    . '<br>' . 'Für weiter Informationen besuchen Sie bitte die "Kurse verwalten"-Seite.'
+    . '<br><br>' . 'Mit freundlichen Gruessen'
+    . '<br>' . 'Ihr Learnweb Team'
+    . '</p>';
+$string['teacher_content_help'] = $emailplaceholders;
+$string['student_subject'] = 'Email Titel [Studierende]';
+$string['student_subject_default'] = 'Kurse werden geloescht';
+$string['student_subject_help'] = $emailplaceholders;
+$string['student_content'] = 'Email Text [Studierende]';
+$string['student_content_default'] = '<p>' . 'Lieber Studierender,'
+    . '<br><br>' . 'die folgenden Kurse werden bald geloescht:'
+    . '<br>' . '##courses##'
+    . '<br>' . 'Bitte speichern Sie alle noetigen Materialien.'
+    . '<br><br>' . 'Mit freundlichen Gruessen'
+    . '<br>' . 'Dein Learnweb Team'
+    . '</p>';
+$string['student_content_help'] = $emailplaceholders;
+$string['notify'] = 'Studiernde benachrichtigen';
+$string['nonotify'] = 'Studiernde nicht benachrichtigen';
+$string['action_prevented_notification'] = 'Eine Benachrichtigung der Studierenden wurde ausgeschlossen';
+$string['action_accepted_notification'] = 'Eine Benachrichtigung der Studierenden wurde eingeleitet';
+$string['status_message_notify'] = 'Studierende werden nach jetzigem Stand benachrichtigt';
+$string['status_message_nonotify'] = 'Studierende werden nach jetzigem Stand nicht benachrichtigt';

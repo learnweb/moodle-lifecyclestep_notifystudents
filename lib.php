@@ -58,6 +58,7 @@ class notifystudents extends libbase {
      * @throws \dml_exception
      */
     public function process_course($processid, $instanceid, $course) {
+        // TODO Write db function insert_db($type)
         global $DB;
         $context = context_course::instance($course->id);
         $userrecords = get_users_by_capability($context, 'lifecyclestep/notifystudents:choice');
@@ -66,7 +67,7 @@ class notifystudents extends libbase {
             $record->touser = $userrecord->id;
             $record->courseid = $course->id;
             $record->instanceid = $instanceid;
-            $record->emailtype = 'teacher';
+            $record->emailtype = 0;
             $DB->insert_record('lifecyclestep_notifystudents', $record);
         }
         $userrecords = get_enrolled_users($context, '', 0, '*');
@@ -76,7 +77,7 @@ class notifystudents extends libbase {
                 $record->touser = $userrecord->id;
                 $record->courseid = $course->id;
                 $record->instanceid = $instanceid;
-                $record->emailtype = 'student';
+                $record->emailtype = 1;
                 $DB->insert_record('lifecyclestep_notifystudents', $record);
             }
         }
@@ -107,8 +108,7 @@ class notifystudents extends libbase {
             } else {
                 // What happens if opt-in was chosen.
                 $DB->delete_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $instanceid,
-                        'courseid' => $course->id));
+                    array('instanceid' => $instanceid, 'courseid' => $course->id, 'emailtype' => 1));
             }
             return step_response::proceed();
         }
@@ -116,46 +116,16 @@ class notifystudents extends libbase {
     }
 
     /**
-     * Send emails to all students, but only one mail per students.
+     * Send emails to all students, but only one mail per student.
      */
     public function post_processing_bulk_operation() {
         $type = 'teacher';
         $this->send_email($type);
-        /*
-        global $DB, $PAGE;
-        $stepinstances = step_manager::get_step_instances_by_subpluginname($this->get_subpluginname());
-        foreach ($stepinstances as $step) {
-            $settings = settings_manager::get_settings($step->id, settings_type::STEP);
-            // Set system context, since format_text needs a context.
-            $PAGE->set_context(\context_system::instance());
-            // Format the raw string in the DB to FORMAT_HTML.
-            $settings['teacher_content'] = format_text($settings['teacher_content'], FORMAT_HTML);
-
-            $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
-                array('instanceid' => $step->id), '', 'distinct touser');
-            foreach ($userstobeinformed as $userrecord) {
-                $user = \core_user::get_user($userrecord->touser);
-                $transaction = $DB->start_delegated_transaction();
-                $mailentries = $DB->get_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id,
-                        'touser' => $user->id));
-
-                $parsedsettings = $this->replace_placeholders($settings, $user, $step->id, $mailentries);
-
-                $subject = $parsedsettings['teacher_subject'];
-                $contenthtml = $parsedsettings['teacher_content'];
-                email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
-                $DB->delete_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id,
-                        'touser' => $user->id));
-                $transaction->allow_commit();
-            }
-        }
-        */
     }
 
-    private function send_email($type) {
+    public function send_email($type) {
         global $DB, $PAGE;
+        if ($type == 'teacher') {$typeid = 0;} else {$typeid = 1;}
         $stepinstances = step_manager::get_step_instances_by_subpluginname($this->get_subpluginname());
         foreach ($stepinstances as $step) {
             $settings = settings_manager::get_settings($step->id, settings_type::STEP);
@@ -165,13 +135,12 @@ class notifystudents extends libbase {
             $settings[$type . '_content'] = format_text($settings[$type . '_content'], FORMAT_HTML);
 
             $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
-                array('instanceid' => $step->id), '', 'distinct touser');
+                array('instanceid' => $step->id, 'emailtype' => $typeid), '', 'distinct touser');
             foreach ($userstobeinformed as $userrecord) {
                 $user = \core_user::get_user($userrecord->touser);
                 $transaction = $DB->start_delegated_transaction();
                 $mailentries = $DB->get_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id,
-                        'touser' => $user->id, 'emailtype' => $type));
+                    array('instanceid' => $step->id, 'touser' => $user->id, 'emailtype' => $typeid));
 
                 $parsedsettings = $this->replace_placeholders($settings, $user, $step->id, $mailentries);
 
@@ -179,15 +148,10 @@ class notifystudents extends libbase {
                 $contenthtml = $parsedsettings[$type . '_content'];
                 email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
                 $DB->delete_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id,
-                        'touser' => $user->id));
+                    array('instanceid' => $step->id, 'touser' => $user->id, 'emailtype' => $typeid));
                 $transaction->allow_commit();
             }
         }
-    }
-
-    private function save_db($type) {
-
     }
 
     /**
@@ -200,7 +164,7 @@ class notifystudents extends libbase {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    private function replace_placeholders($strings, $user, $stepid, $mailentries) {
+    public function replace_placeholders($strings, $user, $stepid, $mailentries) {
 
         $patterns = array();
         $replacements = array();
@@ -275,11 +239,11 @@ class notifystudents extends libbase {
         $mform->setType($elementname, PARAM_INT);
 
         // Adding radio buttons for opt-in or opt-out.
-        $elementname = 'opt';
+        $elementname = 'option';
         $radioarray = array();
         $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optin', 'lifecyclestep_notifystudents'), 1);
         $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optout', 'lifecyclestep_notifystudents'), 0);
-        $mform->addGroup($radioarray, 'option', get_string('option', 'lifecyclestep_notifystudents'), array(' '), false);
+        $mform->addGroup($radioarray, 'opt', get_string('option', 'lifecyclestep_notifystudents'), array(' '), false);
 
         // Adding a subject field for the email to the editingteachers.
         $elementname = 'teacher_subject';
