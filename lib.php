@@ -58,7 +58,7 @@ class notifystudents extends libbase {
      * @throws \dml_exception
      */
     public function process_course($processid, $instanceid, $course) {
-        // TODO Write db function insert_db($type)
+        // TODO Write db function insert_db($type).
         global $DB;
         $context = context_course::instance($course->id);
         $userrecords = get_users_by_capability($context, 'lifecyclestep/notifystudents:choice');
@@ -125,7 +125,11 @@ class notifystudents extends libbase {
 
     public function send_email($type) {
         global $DB, $PAGE;
-        if ($type == 'teacher') {$typeid = 0;} else {$typeid = 1;}
+        if ($type == 'teacher') {
+            $typeid = 0;
+        } else {
+            $typeid = 1;
+        }
         $stepinstances = step_manager::get_step_instances_by_subpluginname($this->get_subpluginname());
         foreach ($stepinstances as $step) {
             $settings = settings_manager::get_settings($step->id, settings_type::STEP);

@@ -49,7 +49,7 @@ class interactionnotifystudents extends interactionlibbase {
 
     /** @var string Action string for triggering to keep a course. */
     const ACTION_NOTIFY = 'Notify';
-    const ACTION_NONOTIFY = 'Do not Notify';
+    const ACTION_NONOTIFY = 'Unnotify';
 
     /**
      * Returns the capability a user has to have to make decisions for a specific course.
@@ -127,7 +127,8 @@ class interactionnotifystudents extends interactionlibbase {
                 $user = \core_user::get_user($userrecord->touser);
                 $transaction = $DB->start_delegated_transaction();
                 $mailentries = $DB->get_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id, 'courseid' => $process->courseid, 'touser' => $user->id, 'emailtype' => $typeid));
+                    array('instanceid' => $step->id, 'courseid' => $process->courseid,
+                        'touser' => $user->id, 'emailtype' => $typeid));
 
                 $parsedsettings = (new notifystudents)->replace_placeholders($settings, $user, $step->id, $mailentries);
 
@@ -135,15 +136,13 @@ class interactionnotifystudents extends interactionlibbase {
                 $contenthtml = $parsedsettings[$type . '_content'];
                 email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
                 $DB->delete_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id, 'courseid' => $process->courseid, 'touser' => $user->id, 'emailtype' => $typeid));
+                    array('instanceid' => $step->id, 'courseid' => $process->courseid,
+                        'touser' => $user->id, 'emailtype' => $typeid));
                 $transaction->allow_commit();
             }
-        }
-        if ($action == self::ACTION_NONOTIFY) {
-            // TODO This if statement does not trigger
+        } elseif ($action == self::ACTION_NONOTIFY) {
             $DB->delete_records('lifecyclestep_notifystudents',
                 array('instanceid' => $step->id, 'courseid' => $process->courseid, 'emailtype' => $typeid));
-            die('hello');
         }
         return step_interactive_response::no_action();
     }
