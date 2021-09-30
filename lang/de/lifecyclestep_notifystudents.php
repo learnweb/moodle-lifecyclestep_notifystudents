@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Lang strings for delete course step
+ * Lang strings for notify students step
  *
  * @package lifecyclestep_notifystudents
  * @copyright  2021 Aaron Koßler WWU
