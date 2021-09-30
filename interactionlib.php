@@ -17,7 +17,7 @@
 /**
  * Implementation for the interactions of the notifystudents step.
  *
- * @package lifecyclestep_email
+ * @package lifecyclestep_notifystudents
  * @copyright  2021 Aaron Koßler WWU
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -41,14 +41,15 @@ require_once(__DIR__ . '/lib.php');
 /**
  * Implementation for the interactions of the notifystudents step.
  *
- * @package lifecyclestep_email
+ * @package lifecyclestep_notifystudents
  * @copyright  2021 Aaron Koßler WWU
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class interactionnotifystudents extends interactionlibbase {
 
-    /** @var string Action string for triggering to keep a course. */
+    /** @var string Action string for triggering to notify students. */
     const ACTION_NOTIFY = 'Notify';
+    /** @var string Action string for triggering to not notify students. */
     const ACTION_NONOTIFY = 'Unnotify';
 
     /**

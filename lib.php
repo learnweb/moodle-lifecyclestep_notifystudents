@@ -97,7 +97,7 @@ class notifystudents extends libbase {
      */
     public function process_waiting_course($processid, $instanceid, $course) {
         global $DB;
-        // When time runs up and no one wants to keep the course, then proceed.
+        // What happpens when time runs up.
         $settings = settings_manager::get_settings($instanceid, settings_type::STEP);
         $process = process_manager::get_process_by_id($processid);
         if ($process->timestepchanged < time() - $settings['responsetimeout']) {
@@ -116,13 +116,17 @@ class notifystudents extends libbase {
     }
 
     /**
-     * Send emails to all students, but only one mail per student.
+     * Send emails to all teachers, but only one mail per teacher.
      */
     public function post_processing_bulk_operation() {
         $type = 'teacher';
         $this->send_email($type);
     }
 
+    /**
+     * Send emails depending on type (teacher or student).
+     * @param string $type of receiver.
+     */
     public function send_email($type) {
         global $DB, $PAGE;
         if ($type == 'teacher') {
@@ -145,9 +149,7 @@ class notifystudents extends libbase {
                 $transaction = $DB->start_delegated_transaction();
                 $mailentries = $DB->get_records('lifecyclestep_notifystudents',
                     array('instanceid' => $step->id, 'touser' => $user->id, 'emailtype' => $typeid));
-
                 $parsedsettings = $this->replace_placeholders($settings, $user, $step->id, $mailentries);
-
                 $subject = $parsedsettings[$type . '_subject'];
                 $contenthtml = $parsedsettings[$type . '_content'];
                 email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
