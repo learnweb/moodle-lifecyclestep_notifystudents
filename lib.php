@@ -250,6 +250,7 @@ class notifystudents extends libbase {
         $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optin', 'lifecyclestep_notifystudents'), 1);
         $radioarray[] = $mform->createElement('radio', $elementname, '', get_string('optout', 'lifecyclestep_notifystudents'), 0);
         $mform->addGroup($radioarray, 'opt', get_string('option', 'lifecyclestep_notifystudents'), array(' '), false);
+        $mform->addHelpButton('opt', 'option', 'lifecyclestep_notifystudents');
 
         // Adding a subject field for the email to the editingteachers.
         $elementname = 'teacher_subject';

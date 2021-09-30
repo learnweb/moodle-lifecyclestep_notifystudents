@@ -23,20 +23,24 @@
  */
 
 $string['pluginname'] = 'Studierende-benachrichtigen-Schritt';
-$string['responsetimeout'] = 'Antwortfrist';
+$string['responsetimeout'] = 'Zeit, die der Lehrende hat, um zu reagieren';
 $string['option'] = 'Option';
+$string['option_help'] = '<p>' . 'Sie können zwischen den folgenden Optionen wählen:'
+    . '<br>' . 'Opt-In: Studierende werden nicht benachrichtigt außer wenn sich der Lehrende dafür entscheidet.'
+    . '<br>' . 'Opt-Out: Studierende werden benachrichtigt außer wenn sich der Lehrende dagegen entscheidet.'
+    . '</p>';
 $string['optin'] = 'Opt-In';
 $string['optout'] = 'Opt-Out';
 $emailplaceholders = '<p>' . 'Sie können die folgenden Platzhalter benutzen:'
     . '<br>' . 'Vorname des Empfängers: ##firstname##'
     . '<br>' . 'Nachname des Empfängers: ##lastname##'
-    . '<br>' . 'Betroffene Kurse: ##courses-html##'
+    . '<br>' . 'Betroffene Kurse: ##courses##'
     . '</p>';
-$string['teacher_subject'] = 'Email Titel [Lehrende]';
+$string['teacher_subject'] = 'Betreffvorlage [Lehrende]';
 $string['teacher_subject_default'] = 'Kurse werden geloescht';
-$string['teacher_subject_help'] = $emailplaceholders;
-$string['teacher_content'] = 'Email Text [Lehrende]';
-$string['teacher_content_default'] = '<p>' . 'Lieber Lehreder,'
+$string['teacher_subject_help'] = 'Stellen Sie die Vorlage für den Emailbetreff ein.' . $emailplaceholders;
+$string['teacher_content'] = 'Email Text Vorlage [Lehrende]';
+$string['teacher_content_default'] = '<p>' . 'Lieber Lehrender,'
     . '<br><br>' . 'die folgenden Kurse werden bald geloescht:'
     . '<br>' . '##courses##'
     . '<br>' . 'Sie könnnen darüber entscheiden, ob die Kursteilnehmer darüber informiert werden sollen oder nicht.'
@@ -44,11 +48,11 @@ $string['teacher_content_default'] = '<p>' . 'Lieber Lehreder,'
     . '<br><br>' . 'Mit freundlichen Gruessen'
     . '<br>' . 'Ihr Learnweb Team'
     . '</p>';
-$string['teacher_content_help'] = $emailplaceholders;
-$string['student_subject'] = 'Email Titel [Studierende]';
+$string['teacher_content_help'] = 'Stellen Sie die Vorlage für Emails ein.' . $emailplaceholders;
+$string['student_subject'] = 'Betreffvorlage [Studierende]';
 $string['student_subject_default'] = 'Kurse werden geloescht';
-$string['student_subject_help'] = $emailplaceholders;
-$string['student_content'] = 'Email Text [Studierende]';
+$string['student_subject_help'] = 'Stellen Sie die Vorlage für den Emailbetreff ein.' . $emailplaceholders;
+$string['student_content'] = 'Email Text Vorlage [Studierende]';
 $string['student_content_default'] = '<p>' . 'Lieber Studierender,'
     . '<br><br>' . 'die folgenden Kurse werden bald geloescht:'
     . '<br>' . '##courses##'
@@ -56,7 +60,7 @@ $string['student_content_default'] = '<p>' . 'Lieber Studierender,'
     . '<br><br>' . 'Mit freundlichen Gruessen'
     . '<br>' . 'Dein Learnweb Team'
     . '</p>';
-$string['student_content_help'] = $emailplaceholders;
+$string['student_content_help'] = 'Stellen Sie die Vorlage für Emails ein.' . $emailplaceholders;
 $string['notify'] = 'Studiernde benachrichtigen';
 $string['nonotify'] = 'Studiernde nicht benachrichtigen';
 $string['action_prevented_notification'] = 'Eine Benachrichtigung der Studierenden wurde ausgeschlossen';

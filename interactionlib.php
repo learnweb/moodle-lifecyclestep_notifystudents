@@ -141,7 +141,7 @@ class interactionnotifystudents extends interactionlibbase {
                         'touser' => $user->id, 'emailtype' => $typeid));
                 $transaction->allow_commit();
             }
-        } elseif ($action == self::ACTION_NONOTIFY) {
+        } else if ($action == self::ACTION_NONOTIFY) {
             $DB->delete_records('lifecyclestep_notifystudents',
                 array('instanceid' => $step->id, 'courseid' => $process->courseid, 'emailtype' => $typeid));
         }
