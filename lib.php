@@ -44,6 +44,15 @@ require_once(__DIR__ . '/../lib.php');
  */
 class notifystudents extends libbase {
 
+    /** @var int Integer for teacher email type. */
+    const TEACHER = 0;
+    /** @var int Integer for student email type. */
+    const STUDENT = 1;
+    /** @var int Integer for opt-out option. */
+    const OPTOUT = 0;
+    /** @var int Integer for opt-in option. */
+    const OPTIN = 1;
+
     /**
      * Processes the course and returns a response.
      * The response tells either
@@ -58,7 +67,6 @@ class notifystudents extends libbase {
      * @throws \dml_exception
      */
     public function process_course($processid, $instanceid, $course) {
-        // TODO Write db function insert_db($type).
         global $DB;
         $context = context_course::instance($course->id);
         $userrecords = get_users_by_capability($context, 'lifecyclestep/notifystudents:choice');
@@ -67,19 +75,17 @@ class notifystudents extends libbase {
             $record->touser = $userrecord->id;
             $record->courseid = $course->id;
             $record->instanceid = $instanceid;
-            $record->emailtype = 0;
+            $record->emailtype = self::TEACHER;
             $DB->insert_record('lifecyclestep_notifystudents', $record);
         }
-        $userrecords = get_enrolled_users($context, '', 0, '*');
+        $userrecords = get_users_by_capability($context, 'lifecyclestep/notifystudents:students');
         foreach ($userrecords as $userrecord) {
-            if (user_has_role_assignment($userrecord->id, 5)) {
-                $record = new \stdClass();
-                $record->touser = $userrecord->id;
-                $record->courseid = $course->id;
-                $record->instanceid = $instanceid;
-                $record->emailtype = 1;
-                $DB->insert_record('lifecyclestep_notifystudents', $record);
-            }
+            $record = new \stdClass();
+            $record->touser = $userrecord->id;
+            $record->courseid = $course->id;
+            $record->instanceid = $instanceid;
+            $record->emailtype = self::STUDENT;
+            $DB->insert_record('lifecyclestep_notifystudents', $record);
         }
         return step_response::waiting();
     }
@@ -97,18 +103,18 @@ class notifystudents extends libbase {
      */
     public function process_waiting_course($processid, $instanceid, $course) {
         global $DB;
-        // What happpens when time runs up.
+        // What happens when time runs up.
         $settings = settings_manager::get_settings($instanceid, settings_type::STEP);
         $process = process_manager::get_process_by_id($processid);
         if ($process->timestepchanged < time() - $settings['responsetimeout']) {
-            if ($settings['option'] == 0) {
+            if ($settings['option'] == self::OPTOUT) {
                 // What happens if opt-out was chosen.
                 $type = 'student';
-                $this->send_email($type);
-            } else {
+                self::send_email($type);
+            } else if ($settings['option'] == self::OPTIN) {
                 // What happens if opt-in was chosen.
                 $DB->delete_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $instanceid, 'courseid' => $course->id, 'emailtype' => 1));
+                    array('instanceid' => $instanceid, 'courseid' => $course->id, 'emailtype' => self::STUDENT));
             }
             return step_response::proceed();
         }
@@ -120,41 +126,58 @@ class notifystudents extends libbase {
      */
     public function post_processing_bulk_operation() {
         $type = 'teacher';
-        $this->send_email($type);
+        self::send_email($type);
     }
 
     /**
      * Send emails depending on type (teacher or student).
      * @param string $type of receiver.
+     * @param int $courseid optional parameter for courseid.
      */
-    public function send_email($type) {
+    public static function send_email($type, $courseid = null) {
         global $DB, $PAGE;
         if ($type == 'teacher') {
-            $typeid = 0;
-        } else {
-            $typeid = 1;
+            $typeid = self::TEACHER;
+        } else if ($type == 'student') {
+            $typeid = self::STUDENT;
         }
-        $stepinstances = step_manager::get_step_instances_by_subpluginname($this->get_subpluginname());
+        $stepinstances = step_manager::get_step_instances_by_subpluginname((new notifystudents())->get_subpluginname());
         foreach ($stepinstances as $step) {
             $settings = settings_manager::get_settings($step->id, settings_type::STEP);
             // Set system context, since format_text needs a context.
             $PAGE->set_context(\context_system::instance());
             // Format the raw string in the DB to FORMAT_HTML.
             $settings[$type . '_content'] = format_text($settings[$type . '_content'], FORMAT_HTML);
-
-            $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
-                array('instanceid' => $step->id, 'emailtype' => $typeid), '', 'distinct touser');
+            if ($courseid) {
+                $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
+                    array('courseid' => $courseid, 'instanceid' => $step->id, 'emailtype' => $typeid), '', 'distinct touser');
+            } else {
+                $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
+                    array('instanceid' => $step->id, 'emailtype' => $typeid), '', 'distinct touser');
+            }
             foreach ($userstobeinformed as $userrecord) {
                 $user = \core_user::get_user($userrecord->touser);
                 $transaction = $DB->start_delegated_transaction();
-                $mailentries = $DB->get_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id, 'touser' => $user->id, 'emailtype' => $typeid));
-                $parsedsettings = $this->replace_placeholders($settings, $user, $step->id, $mailentries);
+                if ($courseid) {
+                    $mailentries = $DB->get_records('lifecyclestep_notifystudents',
+                        array('instanceid' => $step->id, 'courseid' => $courseid,
+                            'touser' => $user->id, 'emailtype' => $typeid));
+                } else {
+                    $mailentries = $DB->get_records('lifecyclestep_notifystudents',
+                        array('instanceid' => $step->id, 'touser' => $user->id, 'emailtype' => $typeid));
+                }
+                $parsedsettings = self::replace_placeholders($settings, $user, $step->id, $mailentries);
                 $subject = $parsedsettings[$type . '_subject'];
                 $contenthtml = $parsedsettings[$type . '_content'];
                 email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
-                $DB->delete_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id, 'touser' => $user->id, 'emailtype' => $typeid));
+                if ($courseid) {
+                    $DB->delete_records('lifecyclestep_notifystudents',
+                        array('instanceid' => $step->id, 'courseid' => $courseid,
+                            'touser' => $user->id, 'emailtype' => $typeid));
+                } else {
+                    $DB->delete_records('lifecyclestep_notifystudents',
+                        array('instanceid' => $step->id, 'touser' => $user->id, 'emailtype' => $typeid));
+                }
                 $transaction->allow_commit();
             }
         }
@@ -170,7 +193,7 @@ class notifystudents extends libbase {
      * @throws \dml_exception
      * @throws \moodle_exception
      */
-    public function replace_placeholders($strings, $user, $stepid, $mailentries) {
+    public static function replace_placeholders($strings, $user, $stepid, $mailentries) {
 
         $patterns = array();
         $replacements = array();
@@ -188,7 +211,7 @@ class notifystudents extends libbase {
         $courses = $mailentries;
         $coursestabledata = array();
         foreach ($courses as $entry) {
-            $coursestabledata[$entry->courseid] = $this->parse_course_row_data($entry->courseid);
+            $coursestabledata[$entry->courseid] = self::parse_course_row_data($entry->courseid);
         }
         $coursestable = new \html_table();
         $coursestable->data = $coursestabledata;
@@ -203,7 +226,7 @@ class notifystudents extends libbase {
      * @return array column of a course
      * @throws \dml_exception
      */
-    private function parse_course_row_data($courseid) {
+    private static function parse_course_row_data($courseid) {
         $course = get_course($courseid);
         return array($course->fullname);
     }

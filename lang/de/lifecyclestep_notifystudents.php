@@ -26,44 +26,44 @@ $string['pluginname'] = 'Studierende-benachrichtigen-Schritt';
 $string['responsetimeout'] = 'Zeit, die der Lehrende hat, um zu reagieren';
 $string['option'] = 'Option';
 $string['option_help'] = '<p>' . 'Sie können zwischen den folgenden Optionen wählen:'
-    . '<br>' . 'Opt-In: Studierende werden nicht benachrichtigt außer wenn sich der Lehrende dafür entscheidet.'
-    . '<br>' . 'Opt-Out: Studierende werden benachrichtigt außer wenn sich der Lehrende dagegen entscheidet.'
+    . '<br>' . 'Opt-In: Studierende werden nicht benachrichtigt, außer wenn sich der Lehrende dafür entscheidet.'
+    . '<br>' . 'Opt-Out: Studierende werden benachrichtigt, außer wenn sich der Lehrende dagegen entscheidet.'
     . '</p>';
 $string['optin'] = 'Opt-In';
 $string['optout'] = 'Opt-Out';
-$emailplaceholders = '<p>' . 'Sie können die folgenden Platzhalter benutzen:'
+$emailplaceholders = '<p>' . 'Sie können die folgenden Platzhalter nutzen:'
     . '<br>' . 'Vorname des Empfängers: ##firstname##'
     . '<br>' . 'Nachname des Empfängers: ##lastname##'
     . '<br>' . 'Betroffene Kurse: ##courses##'
     . '</p>';
 $string['teacher_subject'] = 'Betreffvorlage [Lehrende]';
-$string['teacher_subject_default'] = 'Kurse werden geloescht';
+$string['teacher_subject_default'] = 'Kurse werden gelöscht';
 $string['teacher_subject_help'] = 'Stellen Sie die Vorlage für den Emailbetreff ein.' . $emailplaceholders;
 $string['teacher_content'] = 'Email Text Vorlage [Lehrende]';
 $string['teacher_content_default'] = '<p>' . 'Lieber Lehrender,'
-    . '<br><br>' . 'die folgenden Kurse werden bald geloescht:'
+    . '<br><br>' . 'die folgenden Kurse werden bald gelöscht:'
     . '<br>' . '##courses##'
-    . '<br>' . 'Sie könnnen darüber entscheiden, ob die Kursteilnehmer darüber informiert werden sollen oder nicht.'
+    . '<br>' . 'Sie können darüber entscheiden, ob die Kursteilnehmer darüber informiert werden sollen oder nicht.'
     . '<br>' . 'Für weiter Informationen besuchen Sie bitte die "Kurse verwalten"-Seite.'
-    . '<br><br>' . 'Mit freundlichen Gruessen'
+    . '<br><br>' . 'Mit freundlichen Grüßen'
     . '<br>' . 'Ihr Learnweb Team'
     . '</p>';
 $string['teacher_content_help'] = 'Stellen Sie die Vorlage für Emails ein.' . $emailplaceholders;
 $string['student_subject'] = 'Betreffvorlage [Studierende]';
-$string['student_subject_default'] = 'Kurse werden geloescht';
+$string['student_subject_default'] = 'Kurse werden gelöscht';
 $string['student_subject_help'] = 'Stellen Sie die Vorlage für den Emailbetreff ein.' . $emailplaceholders;
 $string['student_content'] = 'Email Text Vorlage [Studierende]';
 $string['student_content_default'] = '<p>' . 'Lieber Studierender,'
-    . '<br><br>' . 'die folgenden Kurse werden bald geloescht:'
+    . '<br><br>' . 'die folgenden Kurse werden bald gelöscht:'
     . '<br>' . '##courses##'
-    . '<br>' . 'Bitte speichern Sie alle noetigen Materialien.'
-    . '<br><br>' . 'Mit freundlichen Gruessen'
+    . '<br>' . 'Bitte speichern Sie alle nötigen Materialien.'
+    . '<br><br>' . 'Mit freundlichen Grüßen'
     . '<br>' . 'Dein Learnweb Team'
     . '</p>';
 $string['student_content_help'] = 'Stellen Sie die Vorlage für Emails ein.' . $emailplaceholders;
 $string['notify'] = 'Studiernde benachrichtigen';
 $string['nonotify'] = 'Studiernde nicht benachrichtigen';
-$string['action_prevented_notification'] = 'Eine Benachrichtigung der Studierenden wurde ausgeschlossen';
-$string['action_accepted_notification'] = 'Eine Benachrichtigung der Studierenden wurde eingeleitet';
+$string['action_prevented_notification'] = 'Eine Benachrichtigung der Studierenden wurde von {$a} ausgeschlossen';
+$string['action_accepted_notification'] = 'Eine Benachrichtigung der Studierenden wurde von {$a} eingeleitet';
 $string['status_message_notify'] = 'Studierende werden nach jetzigem Stand benachrichtigt';
 $string['status_message_nonotify'] = 'Studierende werden nach jetzigem Stand nicht benachrichtigt';

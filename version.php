@@ -24,5 +24,5 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version  = 2021091501;
+$plugin->version  = 2021100601;
 $plugin->component = 'lifecyclestep_notifystudents';

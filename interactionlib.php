@@ -72,13 +72,13 @@ class interactionnotifystudents extends interactionlibbase {
     public function get_action_tools($process) {
         $step = step_manager::get_step_instance_by_workflow_index($process->workflowid, $process->stepindex);
         $settings = settings_manager::get_settings($step->id, settings_type::STEP);
-        if ($settings['option'] == 1) {
+        if ($settings['option'] == notifystudents::OPTIN) {
             return array(
                 array('action' => self::ACTION_NOTIFY,
                     'alt' => get_string('notify', 'lifecyclestep_notifystudents'),
                 ),
             );
-        } else {
+        } else if ($settings['option'] == notifystudents::OPTOUT) {
             return array(
                 array('action' => self::ACTION_NONOTIFY,
                     'alt' => get_string('nonotify', 'lifecyclestep_notifystudents'),
@@ -96,9 +96,9 @@ class interactionnotifystudents extends interactionlibbase {
     public function get_status_message($process) {
         $step = step_manager::get_step_instance_by_workflow_index($process->workflowid, $process->stepindex);
         $settings = settings_manager::get_settings($step->id, settings_type::STEP);
-        if ($settings['option'] == 1) {
+        if ($settings['option'] == notifystudents::OPTIN) {
             return get_string('status_message_nonotify', 'lifecyclestep_notifystudents');
-        } else {
+        } else if ($settings['option'] == notifystudents::OPTOUT) {
             return get_string('status_message_notify', 'lifecyclestep_notifystudents');
         }
     }
@@ -115,32 +115,11 @@ class interactionnotifystudents extends interactionlibbase {
      *      - rollback: the step has finished and respective controller class should rollback the process.
      */
     public function handle_interaction($process, $step, $action = 'default') {
-        global $DB, $PAGE;
-        $PAGE->set_context(\context_system::instance());
-        $settings = settings_manager::get_settings($step->id, settings_type::STEP);
+        global $DB;
         $type = 'student';
-        $typeid = 1;
+        $typeid = notifystudents::STUDENT;
         if ($action == self::ACTION_NOTIFY) {
-            $settings[$type . '_content'] = format_text($settings[$type . '_content'], FORMAT_HTML);
-            $userstobeinformed = $DB->get_records('lifecyclestep_notifystudents',
-                array('courseid' => $process->courseid, 'instanceid' => $step->id, 'emailtype' => $typeid), '', 'distinct touser');
-            foreach ($userstobeinformed as $userrecord) {
-                $user = \core_user::get_user($userrecord->touser);
-                $transaction = $DB->start_delegated_transaction();
-                $mailentries = $DB->get_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id, 'courseid' => $process->courseid,
-                        'touser' => $user->id, 'emailtype' => $typeid));
-
-                $parsedsettings = (new notifystudents)->replace_placeholders($settings, $user, $step->id, $mailentries);
-
-                $subject = $parsedsettings[$type . '_subject'];
-                $contenthtml = $parsedsettings[$type . '_content'];
-                email_to_user($user, \core_user::get_noreply_user(), $subject, html_to_text($contenthtml), $contenthtml);
-                $DB->delete_records('lifecyclestep_notifystudents',
-                    array('instanceid' => $step->id, 'courseid' => $process->courseid,
-                        'touser' => $user->id, 'emailtype' => $typeid));
-                $transaction->allow_commit();
-            }
+            notifystudents::send_email($type, $process->courseid);
         } else if ($action == self::ACTION_NONOTIFY) {
             $DB->delete_records('lifecyclestep_notifystudents',
                 array('instanceid' => $step->id, 'courseid' => $process->courseid, 'emailtype' => $typeid));
@@ -158,20 +137,9 @@ class interactionnotifystudents extends interactionlibbase {
      */
     public function get_due_date($processid, $stepid) {
         $process = process_manager::get_process_by_id($processid);
-        $steps = step_manager::get_step_instances($process->workflowid);
-        // Necessary to access steps through counting variable.
-        $steps = array_values($steps);
-        // Keep track of the delays for future email steps and sum them up.
         $date = $process->timestepchanged;
-        for ($i = $process->stepindex; $i <= count($steps); $i++) {
-            // The variable $i represents the stepindex. The index of $steps starts at 0.
-            /* @var $step step_subplugin class entry of the subplugin step */
-            $step = $steps[$i - 1];
-            if ($step->subpluginname == 'notifystudents') {
-                $settings = settings_manager::get_settings($step->id, settings_type::STEP);
-                $date += $settings['responsetimeout'];
-            }
-        }
+        $settings = settings_manager::get_settings($stepid, settings_type::STEP);
+        $date += $settings['responsetimeout'];
         return date('d.m.Y', $date);
     }
 
@@ -186,7 +154,7 @@ class interactionnotifystudents extends interactionlibbase {
     public function get_action_string($action, $user) {
         if ($action == self::ACTION_NOTIFY) {
             return get_string('action_prevented_notification', 'lifecyclestep_notifystudents', $user);
-        } else {
+        } else if ($action == self::ACTION_NONOTIFY) {
             return get_string('action_accepted_notification', 'lifecyclestep_notifystudents', $user);
         }
     }

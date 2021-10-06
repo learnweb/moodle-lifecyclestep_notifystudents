@@ -63,8 +63,8 @@ $string['student_content_default'] = '<p>' . 'Dear Student,'
 $string['student_content_help'] = 'Set the template for the content of the email.' . $emailplaceholders;
 $string['notify'] = 'Notify Students';
 $string['nonotify'] = 'Do not notify Students';
-$string['action_prevented_notification'] = 'prevented students from being notified';
-$string['action_accepted_notification'] = 'accepted that students are being notified';
+$string['action_prevented_notification'] = '{$a} prevented students from being notified';
+$string['action_accepted_notification'] = '{$a} accepted that students are being notified';
 $string['status_message_notify'] = 'Students are currently being notified';
 $string['status_message_nonotify'] = 'Students are currently not being notified';
 

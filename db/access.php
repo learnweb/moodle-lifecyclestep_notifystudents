@@ -28,11 +28,18 @@ $capabilities = array(
         'contextlevel' => CONTEXT_COURSE,
         'captype' => 'write',
         'archetypes' => array(
-            'manager' => CAP_PREVENT,
             'editingteacher' => CAP_ALLOW,
-            'teacher' => CAP_PREVENT,
-            'students' => CAP_PREVENT,
         ),
         'clonepermissionsfrom' => 'tool/lifecycle:managecourses'
     ),
+
+    'lifecyclestep/notifystudents:students' => array(
+        'contextlevel' => CONTEXT_COURSE,
+        'captype' => 'read',
+        'archetypes' => array(
+            'teacher' => CAP_ALLOW,
+            'student' => CAP_ALLOW,
+        )
+    ),
+
 );
