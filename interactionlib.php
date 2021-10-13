@@ -120,9 +120,11 @@ class interactionnotifystudents extends interactionlibbase {
         $typeid = notifystudents::STUDENT;
         if ($action == self::ACTION_NOTIFY) {
             notifystudents::send_email($type, $process->courseid);
+            return step_interactive_response::proceed();
         } else if ($action == self::ACTION_NONOTIFY) {
             $DB->delete_records('lifecyclestep_notifystudents',
                 array('instanceid' => $step->id, 'courseid' => $process->courseid, 'emailtype' => $typeid));
+            return step_interactive_response::proceed();
         }
         return step_interactive_response::no_action();
     }
@@ -153,9 +155,9 @@ class interactionnotifystudents extends interactionlibbase {
      */
     public function get_action_string($action, $user) {
         if ($action == self::ACTION_NOTIFY) {
-            return get_string('action_prevented_notification', 'lifecyclestep_notifystudents', $user);
-        } else if ($action == self::ACTION_NONOTIFY) {
             return get_string('action_accepted_notification', 'lifecyclestep_notifystudents', $user);
+        } else if ($action == self::ACTION_NONOTIFY) {
+            return get_string('action_prevented_notification', 'lifecyclestep_notifystudents', $user);
         }
     }
 }
