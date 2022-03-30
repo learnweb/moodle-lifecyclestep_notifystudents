@@ -77,9 +77,15 @@ class interactionnotifystudents extends interactionlibbase {
                 array('action' => self::ACTION_NOTIFY,
                     'alt' => get_string('notify', 'lifecyclestep_notifystudents'),
                 ),
+                array('action' => self::ACTION_NONOTIFY,
+                    'alt' => get_string('nonotify', 'lifecyclestep_notifystudents'),
+                ),
             );
         } else if ($settings['option'] == notifystudents::OPTOUT) {
             return array(
+                array('action' => self::ACTION_NOTIFY,
+                    'alt' => get_string('notify', 'lifecyclestep_notifystudents'),
+                ),
                 array('action' => self::ACTION_NONOTIFY,
                     'alt' => get_string('nonotify', 'lifecyclestep_notifystudents'),
                 ),
