@@ -5,7 +5,7 @@ This is a step for the [Life Cycle](https://github.com/learnweb/moodle-tool_life
 Before notification, the editingteachers can decide whether to opt-in or opt-out of notification depending on the option the admin chose beforehand.
 
 ## Step Setup
-When a notifystudents step is added to a workflow the admin has multiple setup options:
+When a notifystudents step is added to a workflow the administrator has multiple setup options:
 - Time to respond
 - Notification Option: Opt-In or Opt-Out
 - E-Mail Text and Subject for the teachers and the students
@@ -14,10 +14,12 @@ When a notifystudents step is added to a workflow the admin has multiple setup o
 <img src=https://user-images.githubusercontent.com/74201118/160657125-343ebbb8-640d-4459-a81b-ad9b3635e8a8.png width=80%>
 
 ## Behavior
-When a cron-job is executed and a course is triggered by the notifystudents step, all editingteachers of said course are being notified with the preconfigured email text and subject. The teacher can then take action on the "Manage Course" page and decide whether the enrolled students should or shouldn't be notified.
+When a cron-job is executed and a course is triggered by the notifystudents step, all editingteachers of said course are being notified with the preconfigured email text and subject. The teacher can then take action on the "Manage Course" page and decide whether the enrolled students should or shouldn't be notified. If one of the two options is picked the action is triggered immediately. The Teacher can also take no action and the preconfigured option will trigger at the execution of the next cron-job.
+
+<img src=https://user-images.githubusercontent.com/74201118/160929784-51349be0-9d16-4874-ac42-e070a12ab365.png width=80%>
 
 #### Opt-In
-If an editing teacher takes action all enrolled students are immediately notified regarding only this particular course. When no action is taken, the students are not getting an email when the next cron-job is executed.
+When no action is taken, the students are not getting an email when the next cron-job is executed.
 
 #### Opt-Out
-If an editing teacher takes action all enrolled students are excluded from notification regarding only this particular course. When no action is taken, the students are receiving an email with all courses from this workflow they are enrolled in.
+When no action is taken, the students are receiving an email with all courses from this workflow they are enrolled in.
